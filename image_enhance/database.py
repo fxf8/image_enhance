@@ -1,6 +1,7 @@
 from typing import cast
 
 from dataclasses import dataclass
+import glob
 import pathlib
 
 import PIL.Image
@@ -97,3 +98,13 @@ class ImageSample:
     def display_image(self):
         plt.imshow(self.get_tensor().permute(1, 2, 0))
         plt.show()
+
+
+def import_glob(glob_pattern: str = "*") -> list[ImageSample]:
+    return [
+        ImageSample(image_path=pathlib.Path(image_path))
+        for image_path in glob.glob(glob_pattern)
+        if image_path.endswith(".jpg")
+        or image_path.endswith(".png")
+        or image_path.endswith(".jpeg")
+    ]
