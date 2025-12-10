@@ -101,7 +101,7 @@ class ModelTrainingSample:
 
 @dataclass
 class ModelTrainingHistory:
-    loss: list[float] = []
+    losses: list[float] = []
 
 
 def train_model(
@@ -136,7 +136,7 @@ def train_model(
 
             if (iterations + 1) % batch_size == 0:
                 batch_loss: torch.Tensor = loss_sum / batch_size
-                model_training_history.loss.append(batch_loss.item())
+                model_training_history.losses.append(batch_loss.item())
 
                 batch_loss.backward()
                 optimizer.step()

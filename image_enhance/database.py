@@ -22,6 +22,8 @@ class ImageSample:
     image_tensor: torch.Tensor | None = None
     is_modified: bool = False
 
+    fixed_image_tensor: torch.Tensor | None = None
+
     """
     Field image_tensor has shape (3, height, width)
     Component range is [0, 1]
@@ -162,10 +164,12 @@ class ImageSample:
             is_modified=True,
         )
 
-    def jpeg_compress(self, quality=15) -> "ImageSample":
-        img = (self.get_tensor() * 255).byte()
-        encoded = torchvision.io.encode_jpeg(img, quality=quality)
-        decoded = (
+    def jpeg_compress(self, quality: int = 15) -> "ImageSample":
+        image_tensor: torch.Tensor = (self.get_tensor() * 255).byte()
+        encoded: torch.Tensor = cast(
+            torch.Tensor, torchvision.io.encode_jpeg(image_tensor, quality=quality)
+        )
+        decoded: torch.Tensor = (
             cast(torch.Tensor, torchvision.io.decode_jpeg(encoded)).float() / 255.0
         )
 
@@ -174,6 +178,20 @@ class ImageSample:
     def display_image(self):
         plt.imshow(self.get_tensor().permute(1, 2, 0))
         plt.show()
+
+    def export_original_image(self, export_path: pathlib.Path):
+        torchvision.transforms.functional.to_pil_image(self.get_tensor()).save(
+            export_path
+        )
+
+    def export_fixed_image(self, export_path: pathlib.Path) -> bool:
+        if self.fixed_image_tensor is not None:
+            torchvision.transforms.functional.to_pil_image(
+                self.fixed_image_tensor
+            ).save(export_path)
+
+            return True
+        return False
 
 
 def import_glob(glob_pattern: str = "*") -> list[ImageSample]:

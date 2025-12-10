@@ -4,6 +4,13 @@ import pathlib
 import pickle
 import random
 
+import matplotlib
+
+matplotlib.use("QtAgg")
+
+import matplotlib.pyplot as plt
+
+import torch
 import tqdm
 
 import image_enhance.database as idb
@@ -194,3 +201,43 @@ class Session:
             learning_rate=learning_rate,
             display_progress=display_progress,
         )
+
+    def use_model(
+        self,
+        model_name: str,
+        database_name: str,
+        image_glob: str = "*",
+        new_size: tuple[int, int] | None = None,
+    ) -> bool:
+        if model_name not in self.models or database_name not in self.databases:
+            return False
+
+        for image_sample in self.databases[database_name]:
+            if not fnmatch.fnmatch(image_sample.image_path.name, image_glob):
+                continue
+
+            output: torch.Tensor = self.models[model_name](
+                imodel.EnhanceModelInput(
+                    image_sample=image_sample,
+                    new_size=image_sample.get_size() if new_size is None else new_size,
+                )
+            )
+
+            image_sample.fixed_image_tensor = output
+
+        return True
+
+    def plot_model_training_history(self, model_name: str) -> bool:
+        if model_name not in self.model_training_histories:
+            return False
+
+        plt.plot(
+            [*range(len(self.model_training_histories[model_name].losses))],
+            self.model_training_histories[model_name].losses,
+        )
+        plt.title(f"Model Training History for Model {model_name}")
+        plt.xlabel("Batch Number (Iteration Step)")
+        plt.ylabel("Loss (L1 Loss)")
+        plt.show()
+
+        return True
