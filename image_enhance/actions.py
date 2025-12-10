@@ -479,6 +479,12 @@ def train_model(user_interface: ui.UserInterface):
             return None  # User exited
         return default_val if val_str == "" else type(default_val)(val_str)
 
+    maximum_training_samples = get_numeric_input(
+        "Maximum Training Samples", lambda x: x.isdigit() and int(x) > 0, 30_000
+    )
+    if maximum_training_samples is None:
+        return
+
     epochs = get_numeric_input("Epochs", lambda x: x.isdigit() and int(x) > 0, 1)
     if epochs is None:
         return
@@ -522,6 +528,7 @@ def train_model(user_interface: ui.UserInterface):
     user_interface.session.train_model(
         model_name=model_name,
         database_name=db_name,
+        maximum_training_samples=maximum_training_samples,
         epochs=epochs,
         batch_size=batch_size,
         learning_rate=learning_rate,

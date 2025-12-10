@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 import super_image
@@ -106,11 +107,12 @@ class ModelTrainingHistory:
 
 def train_model(
     model: EnhanceModel,
-    samples: list[ModelTrainingSample],
+    samples: Iterable[ModelTrainingSample],
     epochs: int,
     batch_size: int,
     existing_model_training_history: ModelTrainingHistory | None = None,
     learning_rate: float = 1e-3,
+    maximum_training_samples: int = 30_000,
     *,
     display_progress: bool = False,
 ) -> ModelTrainingHistory:
@@ -126,8 +128,11 @@ def train_model(
 
     optimizer.zero_grad()
 
+    samples_iterator = iter(samples)
+
     for epoch in range(epochs):
-        for sample in tqdm.tqdm(samples) if display_progress else samples:
+        for _ in tqdm.tqdm(range(maximum_training_samples)):
+            sample = next(samples_iterator)
             output = model(sample.input)
 
             loss_sum += loss_function(output, sample.expected_output.get_tensor())

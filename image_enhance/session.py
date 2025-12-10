@@ -1,3 +1,4 @@
+from collections.abc import Generator
 import copy
 import fnmatch
 import math
@@ -135,15 +136,13 @@ class Session:
     def get_training_samples(
         self,
         database_name: str,
+        maximum_samples: int = 30_000,
         sample_expansion: int = 10,
         display_progress: bool = False,
         maximum_dimension: int = 256,
         split_resize_ratio: float = 0.5,
-    ) -> list[imodel.ModelTrainingSample]:
-        training_samples: list[imodel.ModelTrainingSample] = []
-
-        if display_progress:
-            print("Constructing expanded training samples...")
+    ) -> Generator[imodel.ModelTrainingSample]:
+        total_generated_training_samples: int = 0
 
         for sample in (
             tqdm.tqdm(self.databases[database_name])
@@ -166,35 +165,39 @@ class Session:
                 for tile in sample_tiles:
                     tile_size: tuple[int, int] = tile.get_size()
 
-                    for _ in range(sample_expansion):
-                        training_samples.append(
-                            imodel.ModelTrainingSample(
-                                input=imodel.EnhanceModelInput(
-                                    image_sample=tile.corrupt(),
-                                    new_size=tile_size,
-                                ),
-                                expected_output=tile,
-                            )
-                        )
+                    yield imodel.ModelTrainingSample(
+                        input=imodel.EnhanceModelInput(
+                            image_sample=tile.corrupt(),
+                            new_size=tile_size,
+                        ),
+                        expected_output=tile,
+                    )
+
+                    total_generated_training_samples += 1
+
+                    if total_generated_training_samples >= maximum_samples:
+                        return
 
             else:
                 for _ in range(sample_expansion):
-                    training_samples.append(
-                        imodel.ModelTrainingSample(
-                            input=imodel.EnhanceModelInput(
-                                image_sample=sample.corrupt(),
-                                new_size=sample.get_size(),
-                            ),
-                            expected_output=sample,
-                        )
+                    yield imodel.ModelTrainingSample(
+                        input=imodel.EnhanceModelInput(
+                            image_sample=sample.corrupt(),
+                            new_size=sample.get_size(),
+                        ),
+                        expected_output=sample,
                     )
 
-        return training_samples
+                    total_generated_training_samples += 1
+
+                    if total_generated_training_samples >= maximum_samples:
+                        return
 
     def train_model(
         self,
         model_name: str,
         database_name: str,
+        maximum_training_samples: int = 30_000,
         epochs: int = 1,
         batch_size: int = 32,
         learning_rate: float = 1e-3,
@@ -203,18 +206,19 @@ class Session:
         maximum_dimension: int = 256,
         split_resize_ratio: float = 0.5,
     ):
-        training_samples: list[imodel.ModelTrainingSample] = self.get_training_samples(
-            database_name,
-            sample_expansion=sample_expansion,
-            display_progress=display_progress,
-            maximum_dimension=maximum_dimension,
-            split_resize_ratio=split_resize_ratio,
+        training_samples: Generator[imodel.ModelTrainingSample] = (
+            self.get_training_samples(
+                database_name,
+                maximum_samples=maximum_training_samples,
+                sample_expansion=sample_expansion,
+                display_progress=display_progress,
+                maximum_dimension=maximum_dimension,
+                split_resize_ratio=split_resize_ratio,
+            )
         )
 
-        random.shuffle(training_samples)
-
         if display_progress:
-            print(f"Training model with {len(training_samples)} samples...")
+            print(f"Training model with at most {maximum_training_samples} samples...")
 
         self.model_training_histories[model_name] = imodel.train_model(
             self.models[model_name],
@@ -224,6 +228,7 @@ class Session:
             existing_model_training_history=self.model_training_histories[model_name],
             learning_rate=learning_rate,
             display_progress=display_progress,
+            maximum_training_samples=maximum_training_samples,
         )
 
     def use_model(
@@ -271,7 +276,6 @@ class Session:
 
         for image_sample in self.databases[database_name]:
             if fnmatch.fnmatch(image_sample.image_path.name, image_glob):
-                image_sample.display_image()
                 displayed_image_samples.append(image_sample)
 
         if len(displayed_image_samples) == 0:
