@@ -1,3 +1,4 @@
+import random
 from typing import cast
 
 from dataclasses import dataclass
@@ -80,11 +81,47 @@ class ImageSample:
 
         return tiles
 
-    def resize(self, new_size: tuple[int, int]) -> "ImageSample":
+    def corrupt(self, depth: int = 2) -> "ImageSample":
+        corrupted_sample: ImageSample = self
+
+        for _ in range(depth):
+            corruption_choice: int = random.randrange(0, 6)
+
+            if corruption_choice == 0:
+                corrupted_sample = corrupted_sample.resize()
+
+            elif corruption_choice == 1:
+                corrupted_sample = corrupted_sample.gaussian_blur()
+
+            elif corruption_choice == 2:
+                corrupted_sample = corrupted_sample.add_noise()
+
+            elif corruption_choice == 3:
+                corrupted_sample = corrupted_sample.cutout()
+
+            elif corruption_choice == 4:
+                corrupted_sample = corrupted_sample.dropout()
+
+            elif corruption_choice == 5:
+                corrupted_sample = corrupted_sample.jpeg_compress()
+
+        return corrupted_sample
+
+    def resize(self, new_size: tuple[int, int] | None = None) -> "ImageSample":
+        tensor: torch.Tensor = self.get_tensor()
+
+        new_size_list: list[int] = []
+
+        if new_size is None:
+            new_size_list = [int(dimension / 1.5) for dimension in [*tensor.shape][1:]]
+
+        else:
+            new_size_list = [*new_size]
+
         return ImageSample(
             image_path=self.image_path,
             image_tensor=torchvision.transforms.functional.resize(
-                self.get_tensor(), [*new_size]
+                self.get_tensor(), new_size_list
             ),
             is_modified=True,
         )
