@@ -1,3 +1,5 @@
+import pathlib
+import pickle
 import random
 
 import tqdm
@@ -11,8 +13,38 @@ class Session:
     databases: dict[str, list[idb.ImageSample]]
 
     def __init__(self):
-        self.model = {}
-        self.database = {}
+        self.models = {}
+        self.databases = {}
+
+    def __getstate__(self):
+        return {
+            "models": {
+                model_name: model.state_dict()
+                for model_name, model in self.models.items()
+            },
+            "databases": self.databases,
+        }
+
+    def __setstate__(self, state):
+        self.models = {}
+
+        for model_name, model_state in state["models"].items():
+            model: imodel.EnhanceModel = imodel.EnhanceModel()
+
+            model.load_state_dict(model_state)
+
+            self.models[model_name] = model
+
+        self.databases = state["databases"]
+
+    def save_session(self, session_path: pathlib.Path):
+        with open(session_path, "wb") as session_file:
+            pickle.dump(self, session_file, protocol=pickle.HIGHEST_PROTOCOL)
+
+    @staticmethod
+    def load_session(session_path: pathlib.Path):
+        with open(session_path, "rb") as session_file:
+            return pickle.load(session_file)
 
     def import_glob(self, database_name: str, glob_pattern: str = "*"):
         self.databases[database_name] = idb.import_glob(glob_pattern)
