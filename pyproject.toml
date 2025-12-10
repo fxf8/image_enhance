@@ -8,5 +8,11 @@ dependencies = [
     "matplotlib>=3.10.7",
     "pillow>=12.0.0",
     "pyiqa>=0.1.14.1",
+    "pyqt6>=6.10.1",
     "torch>=2.9.1",
+]
+
+[dependency-groups]
+dev = [
+    "ipython>=9.8.0",
 ]
