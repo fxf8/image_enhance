@@ -96,7 +96,7 @@ class EnhanceModel(torch.nn.Module):
 @dataclass
 class ModelTrainingSample:
     input: EnhanceModelInput
-    output: idb.ImageSample
+    expected_output: idb.ImageSample
 
 
 def train_model(
@@ -120,11 +120,11 @@ def train_model(
         for sample in tqdm.tqdm(samples) if display_progress else samples:
             output = model(sample.input)
 
-            loss_sum += loss_function(output, sample.output.get_tensor())
+            loss_sum += loss_function(output, sample.expected_output.get_tensor())
 
             iterations += 1
 
-            if iterations % batch_size == 0:
+            if (iterations + 1) % batch_size == 0:
                 batch_loss: torch.Tensor = loss_sum / batch_size
 
                 batch_loss.backward()

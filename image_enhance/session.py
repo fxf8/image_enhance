@@ -1,4 +1,6 @@
-import pickle
+import random
+
+import tqdm
 
 import image_enhance.database as idb
 import image_enhance.model as imodel
@@ -39,11 +41,61 @@ class Session:
     def create_model(self, model_name: str):
         self.models[model_name] = imodel.EnhanceModel()
 
-    def train_model(
+    def get_training_samples(
         self,
-        model_name: str,
         database_name: str,
-        batch_size: int = 32,
-        epochs: int = 1,
-        learning_rate=1e-3,
-    ): ...
+        sample_expansion: int = 10,
+        display_progress: bool = False,
+        maximum_dimension: int = 256,
+        split_resize_ratio: float = 0.5,
+    ) -> list[imodel.ModelTrainingSample]:
+        training_samples: list[imodel.ModelTrainingSample] = []
+
+        if display_progress:
+            print("Constructing expanded training samples...")
+
+        for sample in (
+            tqdm.tqdm(self.databases[database_name])
+            if display_progress
+            else self.databases[database_name]
+        ):
+            sample_width, sample_height = sample.get_size()
+
+            if (
+                random.random() > split_resize_ratio
+                and max(sample_width, sample_height) > maximum_dimension
+            ):
+                sample_tiles: list[idb.ImageSample] = sample.split_image(
+                    (
+                        max(1, sample_height // maximum_dimension),
+                        max(1, sample_width // maximum_dimension),
+                    )
+                )
+
+                for tile in sample_tiles:
+                    tile_size: tuple[int, int] = tile.get_size()
+
+                    for _ in range(sample_expansion):
+                        training_samples.append(
+                            imodel.ModelTrainingSample(
+                                input=imodel.EnhanceModelInput(
+                                    image_sample=tile.corrupt(),
+                                    new_size=tile_size,
+                                ),
+                                expected_output=tile,
+                            )
+                        )
+
+            else:
+                for _ in range(sample_expansion):
+                    training_samples.append(
+                        imodel.ModelTrainingSample(
+                            input=imodel.EnhanceModelInput(
+                                image_sample=sample.corrupt(),
+                                new_size=sample.get_size(),
+                            ),
+                            expected_output=sample,
+                        )
+                    )
+
+        return training_samples

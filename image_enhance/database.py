@@ -45,8 +45,8 @@ class ImageSample:
 
         return width, height
 
-    def split_image(self, splits: tuple[int, int]) -> list["ImageSample"]:
-        height_splits, vertical_splits = splits
+    def split_image(self, split_counts: tuple[int, int]) -> list["ImageSample"]:
+        height_splits, vertical_splits = split_counts
 
         # Load tensor (3, H, W)
         tensor: torch.Tensor = self.get_tensor()
@@ -81,8 +81,11 @@ class ImageSample:
 
         return tiles
 
-    def corrupt(self, depth: int = 2) -> "ImageSample":
+    def corrupt(self, depth: int | None = None) -> "ImageSample":
         corrupted_sample: ImageSample = self
+
+        if depth is None:
+            depth = random.randrange(1, 8)
 
         for _ in range(depth):
             corruption_choice: int = random.randrange(0, 6)
