@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
+import super_image
 import torch
-import py_real_esrgan.model
+import tqdm
 
 import image_enhance.database as idb
 
@@ -28,10 +29,12 @@ class ResidualBlock(torch.nn.Module):
 
 
 class EMBackbone(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, scale: int = 2):
         super().__init__()
 
-        self.model = py_real_esrgan.model.RealESRGAN(device="cpu", scale=4).model
+        self.model = super_image.EdsrModel.from_pretrained(
+            "eugenesiow/edsr-base", scale=scale
+        )
 
         for param in self.model.parameters():
             param.requires_grad = False
@@ -88,3 +91,51 @@ class EnhanceModel(torch.nn.Module):
         x = self.head(x)
 
         return x.squeeze(0)
+
+
+@dataclass
+class ModelTrainingSample:
+    input: EnhanceModelInput
+    output: idb.ImageSample
+
+
+def train_model(
+    model: EnhanceModel,
+    samples: list[ModelTrainingSample],
+    epochs: int,
+    batch_size: int,
+    learning_rate: float = 1e-3,
+    *,
+    display_progress: bool = False,
+):
+    optimizer = torch.optim.Adam(model.head.parameters(), lr=learning_rate)
+    loss_function = torch.nn.L1Loss()
+
+    loss_sum: torch.Tensor = torch.tensor(0.0)
+    iterations: int = 0
+
+    optimizer.zero_grad()
+
+    for epoch in range(epochs):
+        for sample in tqdm.tqdm(samples) if display_progress else samples:
+            output = model(sample.input)
+
+            loss_sum += loss_function(output, sample.output.get_tensor())
+
+            iterations += 1
+
+            if iterations % batch_size == 0:
+                batch_loss: torch.Tensor = loss_sum / batch_size
+
+                batch_loss.backward()
+                optimizer.step()
+                optimizer.zero_grad()
+
+                loss_sum: torch.Tensor = torch.tensor(0.0)
+
+        if display_progress:
+            print("Completed epoch", epoch)
+
+        loss_sum.backward()
+        optimizer.step()
+        optimizer.zero_grad()
