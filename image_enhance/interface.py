@@ -15,8 +15,8 @@ class UserInterface:
 @dataclass
 class MenuOption:
     name: str
-    description: str
-    header: str
+    description: str | None = None
+    header: str | None = None
     callback: Callable[[UserInterface], None] | None = None
     suboptions: list["MenuOption"] | None = None
 
@@ -44,12 +44,19 @@ def get_validated_input(
                 print(error_message)
 
 
-def prompt(ui: UserInterface, diolague_tree: list[MenuOption], header: str = ""):
+def prompt(
+    ui: UserInterface, diolague_tree: list[MenuOption], header: str | None = None
+):
     while True:
-        print(header)
+        if header is not None:
+            print(header)
 
         for index, menu_option in enumerate(diolague_tree):
-            print(f"{index + 1}. {menu_option.name} - {menu_option.description}")
+            if menu_option.description is not None:
+                print(f"{index + 1}. {menu_option.name} - {menu_option.description}")
+
+            else:
+                print(f"{index + 1}. {menu_option.name}")
 
         print()
 
