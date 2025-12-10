@@ -99,15 +99,25 @@ class ModelTrainingSample:
     expected_output: idb.ImageSample
 
 
+@dataclass
+class ModelTrainingHistory:
+    loss: list[float] = []
+
+
 def train_model(
     model: EnhanceModel,
     samples: list[ModelTrainingSample],
     epochs: int,
     batch_size: int,
+    existing_model_training_history: ModelTrainingHistory | None = None,
     learning_rate: float = 1e-3,
     *,
     display_progress: bool = False,
-):
+) -> ModelTrainingHistory:
+    model_training_history: ModelTrainingHistory = (
+        existing_model_training_history or ModelTrainingHistory([])
+    )
+
     optimizer = torch.optim.Adam(model.head.parameters(), lr=learning_rate)
     loss_function = torch.nn.L1Loss()
 
@@ -126,6 +136,7 @@ def train_model(
 
             if (iterations + 1) % batch_size == 0:
                 batch_loss: torch.Tensor = loss_sum / batch_size
+                model_training_history.loss.append(batch_loss.item())
 
                 batch_loss.backward()
                 optimizer.step()
@@ -139,3 +150,5 @@ def train_model(
         loss_sum.backward()
         optimizer.step()
         optimizer.zero_grad()
+
+    return model_training_history
