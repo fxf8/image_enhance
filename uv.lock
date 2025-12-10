@@ -181,6 +181,29 @@ wheels = [
 ]
 
 [[package]]
+name = "basicsr"
+version = "1.4.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "addict" },
+    { name = "future" },
+    { name = "lmdb" },
+    { name = "numpy" },
+    { name = "opencv-python" },
+    { name = "pillow" },
+    { name = "pyyaml" },
+    { name = "requests" },
+    { name = "scikit-image" },
+    { name = "scipy" },
+    { name = "tb-nightly" },
+    { name = "torch" },
+    { name = "torchvision" },
+    { name = "tqdm" },
+    { name = "yapf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/86/41/00a6b000f222f0fa4c6d9e1d6dcc9811a374cabb8abb9d408b77de39648c/basicsr-1.4.2.tar.gz", hash = "sha256:b89b595a87ef964cda9913b4d99380ddb6554c965577c0c10cb7b78e31301e87", size = 172524, upload-time = "2022-08-30T04:33:55.259Z" }
+
+[[package]]
 name = "bitsandbytes"
 version = "0.48.2"
 source = { registry = "https://pypi.org/simple" }
@@ -630,6 +653,29 @@ wheels = [
 ]
 
 [[package]]
+name = "gfpgan"
+version = "1.3.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "basicsr" },
+    { name = "facexlib" },
+    { name = "lmdb" },
+    { name = "numpy" },
+    { name = "opencv-python" },
+    { name = "pyyaml" },
+    { name = "scipy" },
+    { name = "tb-nightly" },
+    { name = "torch" },
+    { name = "torchvision" },
+    { name = "tqdm" },
+    { name = "yapf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6b/e9/b2db24ed840f188792581d217229022ff85e0ae3055a708e9f28430b8083/gfpgan-1.3.8.tar.gz", hash = "sha256:21618b06ce8ea6230448cb526b012004f23a9ab956b55c833f69b9fc8a60c4f9", size = 95855, upload-time = "2022-09-16T11:36:05.753Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/80/a2/84bb50a2655fda1e6f35ae57399526051b8a8b96ad730aea82abeaac4de8/gfpgan-1.3.8-py3-none-any.whl", hash = "sha256:3d8386df6320aa9dfb0dd4cd09d9f8ed12ae0bbd9b2df257c3d21aefac5d8b85", size = 52176, upload-time = "2022-09-16T11:36:04.243Z" },
+]
+
+[[package]]
 name = "grpcio"
 version = "1.76.0"
 source = { registry = "https://pypi.org/simple" }
@@ -797,6 +843,7 @@ dependencies = [
     { name = "pillow" },
     { name = "pyiqa" },
     { name = "pyqt6" },
+    { name = "realesrgan" },
     { name = "torch" },
 ]
 
@@ -811,6 +858,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=12.0.0" },
     { name = "pyiqa", specifier = ">=0.1.14.1" },
     { name = "pyqt6", specifier = ">=6.10.1" },
+    { name = "realesrgan", specifier = ">=0.3.0" },
     { name = "torch", specifier = ">=2.9.1" },
 ]
 
@@ -2153,6 +2201,26 @@ wheels = [
 ]
 
 [[package]]
+name = "realesrgan"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "basicsr" },
+    { name = "facexlib" },
+    { name = "gfpgan" },
+    { name = "numpy" },
+    { name = "opencv-python" },
+    { name = "pillow" },
+    { name = "torch" },
+    { name = "torchvision" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/75/40/4af728ed9c48ac65634976535f36afd421de39315920e5f740049a6524a6/realesrgan-0.3.0.tar.gz", hash = "sha256:0d36da96ab9f447071606e91f502ccdfb08f80cc82ee4f8caf720c7745ccec7e", size = 3020534, upload-time = "2022-09-20T11:49:56.695Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b2/3e/e2f79917a04991b9237df264f7abab2b58cf94748e7acfb6677b55232ca1/realesrgan-0.3.0-py3-none-any.whl", hash = "sha256:59336c16c30dd5130eff350dd27424acb9b7281d18a6810130e265606c9a6088", size = 26012, upload-time = "2022-09-20T11:49:54.915Z" },
+]
+
+[[package]]
 name = "regex"
 version = "2025.11.3"
 source = { registry = "https://pypi.org/simple" }
@@ -2473,6 +2541,26 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/83/d3/803453b36afefb7c2bb238361cd4ae6125a569b4db67cd9e79846ba2d68c/sympy-1.14.0.tar.gz", hash = "sha256:d3d3fe8df1e5a0b42f0e7bdf50541697dbe7d23746e894990c030e2b05e72517", size = 7793921, upload-time = "2025-04-27T18:05:01.611Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl", hash = "sha256:e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5", size = 6299353, upload-time = "2025-04-27T18:04:59.103Z" },
+]
+
+[[package]]
+name = "tb-nightly"
+version = "2.21.0a20251023"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "absl-py" },
+    { name = "grpcio" },
+    { name = "markdown" },
+    { name = "numpy" },
+    { name = "packaging" },
+    { name = "pillow" },
+    { name = "protobuf" },
+    { name = "setuptools" },
+    { name = "tensorboard-data-server" },
+    { name = "werkzeug" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9a/a8/65f385e7d3e7e8489c030d22ca4c0c0a02d92b755e6e8873d84c7d8174bd/tb_nightly-2.21.0a20251023-py3-none-any.whl", hash = "sha256:369f8f7c160b87d15515a35b49f49ac3212ef0547ed20e4dee37cf0ea7079d28", size = 5525812, upload-time = "2025-10-23T12:24:52.947Z" },
 ]
 
 [[package]]
