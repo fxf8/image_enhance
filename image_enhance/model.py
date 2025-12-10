@@ -101,7 +101,7 @@ class ModelTrainingSample:
 
 @dataclass
 class ModelTrainingHistory:
-    losses: list[float] = []
+    losses: list[float]
 
 
 def train_model(
