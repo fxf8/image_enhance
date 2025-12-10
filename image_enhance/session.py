@@ -1,5 +1,6 @@
 import copy
 import fnmatch
+import math
 import pathlib
 import pickle
 import random
@@ -8,9 +9,12 @@ import matplotlib
 
 matplotlib.use("QtAgg")
 
+import matplotlib.axes
 import matplotlib.pyplot as plt
 
+import numpy as np
 import torch
+import torchvision.transforms.functional
 import tqdm
 
 import image_enhance.database as idb
@@ -107,6 +111,10 @@ class Session:
     def create_model(self, model_name: str):
         self.models[model_name] = imodel.EnhanceModel()
         self.model_training_histories[model_name] = imodel.ModelTrainingHistory([])
+
+    def delete_model(self, model_name: str):
+        del self.models[model_name]
+        del self.model_training_histories[model_name]
 
     def get_training_samples(
         self,
@@ -241,3 +249,70 @@ class Session:
         plt.show()
 
         return True
+
+    def show_images(self, database_name: str, image_glob: str = "*"):
+        displayed_image_samples: list[idb.ImageSample] = []
+
+        for image_sample in self.databases[database_name]:
+            if fnmatch.fnmatch(image_sample.image_path.name, image_glob):
+                image_sample.display_image()
+                displayed_image_samples.append(image_sample)
+
+        if len(displayed_image_samples) == 0:
+            print("No image samples found.")
+
+            return
+
+        rows_count: int = math.floor(math.sqrt(len(displayed_image_samples)))
+        columns_count: int = math.ceil(len(displayed_image_samples) / rows_count)
+
+        figure, axes = plt.subplots(rows_count, columns_count)
+
+        if rows_count == 1 and columns_count == 1:
+            axes_grid = np.array([[axes]])
+        elif rows_count == 1 or columns_count == 1:
+            axes_grid = np.atleast_2d(axes)
+        else:
+            axes_grid = axes
+
+        for image_sample_index, image_sample in enumerate(displayed_image_samples):
+            axis: matplotlib.axes.Axes = axes_grid[
+                image_sample_index // columns_count, image_sample_index % columns_count
+            ]
+
+            if image_sample.fixed_image_tensor is not None:
+                axis_first_half = axis.inset_axes((0, 0, 0.5, 1))
+                axis_second_half = axis.inset_axes((0.5, 0, 0.5, 1))
+
+                axis_first_half.imshow(
+                    torchvision.transforms.functional.to_pil_image(
+                        image_sample.get_tensor()
+                    )
+                )
+
+                axis_second_half.imshow(
+                    torchvision.transforms.functional.to_pil_image(
+                        image_sample.fixed_image_tensor
+                    )
+                )
+
+                axis_first_half.set_title(
+                    f"Original Image {image_sample.image_path.name}"
+                )
+                axis_second_half.set_title(
+                    f"Fixed Image {image_sample.image_path.name}"
+                )
+
+            else:
+                axis.imshow(
+                    torchvision.transforms.functional.to_pil_image(
+                        image_sample.get_tensor()
+                    )
+                )
+                axis.set_title(f"Original Image {image_sample.image_path.name}")
+
+            axis.axis("off")
+
+        figure.tight_layout()
+
+        plt.show()
