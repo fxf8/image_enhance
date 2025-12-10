@@ -81,6 +81,9 @@ class Session:
         else:
             self.databases[database_name] = idb.import_glob(glob_pattern)
 
+    def create_database(self, database_name: str):
+        self.databases[database_name] = []
+
     def corrupt_images(
         self, database_name: str, image_name_glob: str = "*", iterations: int = 1
     ):
