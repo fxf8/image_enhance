@@ -1,19 +1,29 @@
 import image_enhance.interface as ui
+import image_enhance.actions as iactions
 
 
 def main():
     DIOLAGUE_TREE: list[ui.MenuOption] = [
         ui.MenuOption(
-            name="Merge Databases",
-            description="Merge multiple databases into one",
-            header="Merge Databases",
+            name="Manage Session",
+            suboptions=[
+                ui.MenuOption(
+                    name="Save Session",
+                    callback=iactions.save_session,
+                ),
+            ],
+        ),
+        ui.MenuOption(
+            name="Manage Databases",
         ),
     ]
 
+    user_interface: ui.UserInterface = ui.UserInterface()
+
     ui.prompt(
-        ui.UserInterface(),
+        user_interface,
         DIOLAGUE_TREE,
-        header=" ------- Image Enhance Menu -------\n",
+        header=f" ------- Image Enhance Menu ------- (Session: '{user_interface.session.get_name_formatted()}')\n",
     )
 
 

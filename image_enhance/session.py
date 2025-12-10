@@ -25,11 +25,13 @@ class Session:
     models: dict[str, imodel.EnhanceModel]
     model_training_histories: dict[str, imodel.ModelTrainingHistory]
     databases: dict[str, list[idb.ImageSample]]
+    name: str | None
 
     def __init__(self):
         self.models = {}
         self.model_training_histories = {}
         self.databases = {}
+        self.name = None
 
     def __getstate__(self):
         return {
@@ -38,22 +40,33 @@ class Session:
                 for model_name, model in self.models.items()
             },
             "databases": self.databases,
+            "name": self.name,
         }
 
     def __setstate__(self, state):
         self.models = {}
 
-        for model_name, model_state in state["models"].items():
-            model: imodel.EnhanceModel = imodel.EnhanceModel()
+        if "models" in state:
+            for model_name, model_state in state["models"].items():
+                model: imodel.EnhanceModel = imodel.EnhanceModel()
 
-            model.load_state_dict(model_state)
+                model.load_state_dict(model_state)
 
-            self.models[model_name] = model
+                self.models[model_name] = model
 
-        self.databases = state["databases"]
+        self.databases = state["databases"] if "databases" in state else {}
+        self.name = state["name"] if "name" in state else None
+
+    def get_name_formatted(self) -> str:
+        if self.name is None:
+            return "New Unnamed Session"
+
+        return self.name
 
     def save_session(self, session_path: pathlib.Path):
         with open(session_path, "wb") as session_file:
+            self.name = session_path.name
+
             pickle.dump(self, session_file, protocol=pickle.HIGHEST_PROTOCOL)
 
     @staticmethod

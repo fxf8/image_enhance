@@ -5,11 +5,11 @@ import image_enhance.session as isession
 
 
 class UserInterface:
-    session: isession.Session | None
+    session: isession.Session
 
     def __init__(self, session: isession.Session | None = None):
         self.location = []
-        self.session = session
+        self.session = session or isession.Session()
 
 
 @dataclass
@@ -23,7 +23,7 @@ class MenuOption:
 
 def get_validated_input(
     prompt: str,
-    validator: Callable[[str], bool],
+    validator: Callable[[str], bool] | None = None,
     error_message: str | Callable[[str], str] | None = None,
     exit_string: str | None = "e",
 ) -> str | None:
@@ -33,7 +33,7 @@ def get_validated_input(
         if exit_string is not None and user_input == exit_string:
             return None
 
-        if validator(user_input):
+        if validator is None or validator(user_input):
             return user_input
 
         if error_message is not None:
