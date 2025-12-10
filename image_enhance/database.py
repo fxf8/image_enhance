@@ -44,6 +44,42 @@ class ImageSample:
 
         return width, height
 
+    def split_image(self, splits: tuple[int, int]) -> list["ImageSample"]:
+        height_splits, vertical_splits = splits
+
+        # Load tensor (3, H, W)
+        tensor: torch.Tensor = self.get_tensor()
+
+        _, H, W = tensor.shape
+
+        tile_height: int = H // vertical_splits
+        tile_width: int = W // height_splits
+
+        tiles: list[ImageSample] = []
+
+        for row in range(vertical_splits):
+            for col in range(height_splits):
+                # Compute slice bounds
+                top: int = row * tile_height
+                left: int = col * tile_width
+
+                bottom: int = top + tile_height
+                right: int = left + tile_width
+
+                # Slice tile
+                tile_tensor: torch.Tensor = tensor[:, top:bottom, left:right].clone()
+
+                # Create ImageSample for each tile
+                tiles.append(
+                    ImageSample(
+                        image_path=self.image_path,
+                        image_tensor=tile_tensor,
+                        is_modified=True,
+                    )
+                )
+
+        return tiles
+
     def resize(self, new_size: tuple[int, int]) -> "ImageSample":
         return ImageSample(
             image_path=self.image_path,
