@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision.transforms.functional
-import tqdm
 
 import image_enhance.database as idb
 import image_enhance.model as imodel
@@ -55,6 +54,12 @@ class Session:
 
                 self.models[model_name] = model
 
+        self.model_training_histories = (
+            state["model_training_histories"]
+            if "model_training_histories" in state
+            else {}
+        )
+
         self.databases = state["databases"] if "databases" in state else {}
         self.name = state["name"] if "name" in state else None
 
@@ -68,12 +73,16 @@ class Session:
         with open(session_path, "wb") as session_file:
             self.name = session_path.name
 
-            pickle.dump(self, session_file, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self, session_file)
 
     @staticmethod
-    def load_session(session_path: pathlib.Path):
+    def load_session(session_path: pathlib.Path) -> "Session | None":
         with open(session_path, "rb") as session_file:
-            return pickle.load(session_file)
+            try:
+                return pickle.load(session_file)
+
+            except pickle.UnpicklingError:
+                return None
 
     def import_glob(self, database_name: str, glob_pattern: str = "*"):
         if database_name in self.databases:
@@ -138,17 +147,12 @@ class Session:
         database_name: str,
         maximum_samples: int = 30_000,
         sample_expansion: int = 10,
-        display_progress: bool = False,
         maximum_dimension: int = 256,
         split_resize_ratio: float = 0.5,
     ) -> Generator[imodel.ModelTrainingSample]:
         total_generated_training_samples: int = 0
 
-        for sample in (
-            tqdm.tqdm(self.databases[database_name])
-            if display_progress
-            else self.databases[database_name]
-        ):
+        for sample in self.databases[database_name]:
             sample_width, sample_height = sample.get_size()
 
             if (
@@ -211,7 +215,6 @@ class Session:
                 database_name,
                 maximum_samples=maximum_training_samples,
                 sample_expansion=sample_expansion,
-                display_progress=display_progress,
                 maximum_dimension=maximum_dimension,
                 split_resize_ratio=split_resize_ratio,
             )

@@ -45,7 +45,7 @@ class ImageSample:
     def get_size(self, cache: bool = False) -> tuple[int, int]:
         _, height, width = self.get_tensor(cache=cache).shape
 
-        return width, height
+        return height, width
 
     def split_image(self, split_counts: tuple[int, int]) -> list["ImageSample"]:
         height_splits, vertical_splits = split_counts
